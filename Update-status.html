@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Update Application Status - Industrial Approvals</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            🏭 <span>Industrial Approval Portal</span>
+        </div>
+
+        <div class="nav-right">
+            <span>Authority Panel</span>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+    </header>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="container">
+
+        <!-- Page Heading -->
+
+        <div class="page-header">
+
+            <div>
+                <h1>Update Application Status</h1>
+
+                <p>
+                    Review the verification results and update the application status.
+                </p>
+            </div>
+
+            <a href="verify-documents.html" class="back-btn">
+                ← Back to Documents
+            </a>
+
+        </div>
+
+
+        <!-- ================= APPLICATION DETAILS ================= -->
+
+        <section class="card">
+
+            <h2>Application Details</h2>
+
+            <div class="details-grid">
+
+                <div>
+                    <label>Application ID</label>
+                    <p id="applicantId">Loading...</p>
+                </div>
+
+                <div>
+                    <label>Applicant</label>
+                    <p id="applicantName">Loading...</p>
+                </div>
+
+                <div>
+                    <label>Industry Type</label>
+                    <p id="industryType">Loading...</p>
+                </div>
+
+                <div>
+                    <label>Application Date</label>
+                    <p id="applicationDate">Loading...</p>
+                </div>
+
+                <div>
+                    <label>Approval Type</label>
+                    <p>Industrial Establishment Approval</p>
+                </div>
+
+                <div>
+                    <label>Current Status</label>
+
+                    <span class="status pending" id="currentstatus">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= VERIFICATION SUMMARY ================= -->
+
+        <section class="card">
+
+            <h2>Verification Summary</h2>
+
+            <div class="summary-grid">
+
+                <div class="summary-box">
+
+                    <span>Total Documents</span>
+
+                    <strong id="totalDocuments">0</strong>
+
+                </div>
+
+
+                <div class="summary-box verified-box">
+
+                    <span>Verified</span>
+
+                    <strong id="verifiedDocuments">0</strong>
+
+                </div>
+
+
+                <div class="summary-box rejected-box">
+
+                    <span>Rejected</span>
+
+                    <strong id="rejectedDocuments">0</strong>
+
+                </div>
+
+
+                <div class="summary-box pending-box">
+
+                    <span>Pending</span>
+
+                    <strong id="pendingDocuments">0</strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= UPDATE STATUS ================= -->
+
+        <section class="card">
+
+            <h2>Change Application Status</h2>
+
+            <p class="section-description">
+                Select the appropriate status after reviewing the application
+                and submitted documents.
+            </p>
+
+
+            <div class="form-group">
+
+                <label for="applicationStatus">
+                    New Application Status
+                </label>
+
+                <select id="applicationStatus">
+
+                    <option value="">
+                        -- Select Status --
+                    </option>
+
+                    <option value="approved">
+                        Approved
+                    </option>
+
+                    <option value="rejected">
+                        Rejected
+                    </option>
+
+                    <option value="clarification">
+                        Clarification Required
+                    </option>
+
+                    <option value="additional_documents">
+                        Additional Documents Required
+                    </option>
+
+                    <option value="under_review">
+                        Under Further Review
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- ================= REMARKS ================= -->
+
+            <div class="form-group">
+
+                <label for="remarks">
+                    Authority Remarks
+                </label>
+
+                <textarea
+                    id="remarks"
+                    rows="6"
+                    placeholder="Enter remarks or reason for the selected status..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- ================= NOTIFICATION ================= -->
+
+            <div class="notification-option">
+
+                <input
+                    type="checkbox"
+                    id="notifyApplicant"
+                    checked
+                >
+
+                <label for="notifyApplicant">
+                    Notify applicant about the status update
+                </label>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= STATUS PREVIEW ================= -->
+
+        <section class="card">
+
+            <h2>Status Preview</h2>
+
+            <div class="status-preview">
+
+                <div>
+
+                    <span>Application</span>
+
+                    <strong id="previewApplicationId">
+                        Loading...
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>New Status</span>
+
+                    <strong id="statusPreview">
+                        Not Selected
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ACTION BUTTONS ================= -->
+
+        <div class="bottom-actions">
+
+            <button
+                class="secondary-btn"
+                onclick="cancelUpdate()"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                class="primary-btn"
+                onclick="updateStatus()"
+            >
+                ✓ Update Application Status
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script src="script.js"></script>
+
+    <script>
+
+let application = null;
+
+
+// ================= LOAD APPLICATION =================
+
+async function loadApplication() {
+
+    const applicationId =
+        localStorage.getItem("selectedApplicationId");
+
+    if (!applicationId) {
+
+        alert("Application not found.");
+
+        window.location.href =
+            "applications.html";
+
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `http://localhost:5000/api/applications/${applicationId}`
+        );
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.message ||
+                "Failed to load application."
+            );
+
+            return;
+        }
+
+
+        application = data.application;
+
+        console.log(
+            "Application loaded:",
+            application
+        );
+
+
+        // Application details
+
+        document.getElementById(
+            "applicationId"
+        ).textContent =
+            application._id;
+
+
+        document.getElementById(
+            "applicantName"
+        ).textContent =
+            application.applicantName;
+
+
+        document.getElementById(
+            "industryType"
+        ).textContent =
+            application.industryType;
+
+
+        document.getElementById(
+            "applicationDate"
+        ).textContent =
+            new Date(
+                application.createdAt
+            ).toLocaleDateString();
+
+
+        document.getElementById(
+            "currentStatus"
+        ).textContent =
+            application.status;
+
+
+        document.getElementById(
+            "previewApplicationId"
+        ).textContent =
+            application._id;
+
+
+        loadDocumentSummary();
+
+
+    } catch (error) {
+
+        console.error(
+            "Application loading error:",
+            error
+        );
+
+        alert(
+            "Cannot connect to the backend. Please make sure the server is running."
+        );
+    }
+}
+
+
+// ================= DOCUMENT SUMMARY =================
+
+function loadDocumentSummary() {
+
+    const documents =
+        application.documents || {};
+
+
+    const documentFiles = [
+
+        documents.companyRegistration,
+
+        documents.landOwnership,
+
+        documents.projectReport,
+
+        documents.environmentalDocuments,
+
+        documents.buildingSitePlan,
+
+        documents.additionalDocument
+
+    ].filter(function(file) {
+
+        return file && file.trim() !== "";
+
+    });
+
+
+    const total =
+        documentFiles.length;
+
+
+    // At this stage the verification page
+    // has completed the overall verification.
+    // We use the application status to show
+    // the summary.
+
+    let verified = 0;
+    let rejected = 0;
+    let pending = 0;
+
+
+    if (
+        application.status ===
+        "Documents Verified"
+    ) {
+
+        verified = total;
+
+    }
+
+    else if (
+        application.status ===
+        "Documents Rejected"
+    ) {
+
+        rejected = total;
+
+    }
+
+    else {
+
+        pending = total;
+
+    }
+
+
+    document.getElementById(
+        "totalDocuments"
+    ).textContent = total;
+
+
+    document.getElementById(
+        "verifiedDocuments"
+    ).textContent = verified;
+
+
+    document.getElementById(
+        "rejectedDocuments"
+    ).textContent = rejected;
+
+
+    document.getElementById(
+        "pendingDocuments"
+    ).textContent = pending;
+
+}
+
+
+// ================= STATUS PREVIEW =================
+
+const statusSelect =
+    document.getElementById(
+        "applicationStatus"
+    );
+
+const statusPreview =
+    document.getElementById(
+        "statusPreview"
+    );
+
+
+statusSelect.addEventListener(
+    "change",
+    function() {
+
+        if (this.value === "") {
+
+            statusPreview.textContent =
+                "Not Selected";
+
+        } else {
+
+            statusPreview.textContent =
+                this.options[
+                    this.selectedIndex
+                ].text;
+        }
+
+    }
+);
+
+
+// ================= UPDATE STATUS =================
+
+async function updateStatus() {
+
+    const status =
+        document.getElementById(
+            "applicationStatus"
+        ).value;
+
+
+    const remarks =
+        document.getElementById(
+            "remarks"
+        ).value.trim();
+
+
+    const notify =
+        document.getElementById(
+            "notifyApplicant"
+        ).checked;
+
+
+    // Check status
+
+    if (status === "") {
+
+        alert(
+            "Please select an application status."
+        );
+
+        return;
+    }
+
+
+    // Require remarks for rejection/clarification
+
+    if (
+        (
+            status === "rejected" ||
+            status === "clarification" ||
+            status === "additional_documents"
+        )
+        &&
+        remarks === ""
+    ) {
+
+        alert(
+            "Please enter remarks for the selected status."
+        );
+
+        return;
+    }
+
+
+    const selectedStatus =
+        statusSelect.options[
+            statusSelect.selectedIndex
+        ].text;
+
+
+    const confirmation =
+        confirm(
+            "Are you sure you want to update this application to '" +
+            selectedStatus +
+            "'?"
+        );
+
+
+    if (!confirmation) {
+
+        return;
+    }
+
+
+    // Convert frontend values
+    // into database status values
+
+    let databaseStatus = "Under Review";
+
+
+    if (status === "approved") {
+
+        databaseStatus = "Approved";
+
+    }
+
+    else if (status === "rejected") {
+
+        databaseStatus = "Rejected";
+
+    }
+
+    else if (status === "clarification") {
+
+        databaseStatus =
+            "Clarification Required";
+
+    }
+
+    else if (
+        status === "additional_documents"
+    ) {
+
+        databaseStatus =
+            "Additional Documents Required";
+
+    }
+
+    else if (
+        status === "under_review"
+    ) {
+
+        databaseStatus =
+            "Under Review";
+
+    }
+
+
+    try {
+
+        const response = await fetch(
+
+            `http://localhost:5000/api/applications/update/${application._id}`,
+
+            {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    status:
+                        databaseStatus,
+
+                    remarks:
+                        remarks
+
+                })
+
+            }
+
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.message ||
+                "Failed to update application status."
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "Updated application:",
+            data.application
+        );
+
+
+        if (notify) {
+
+            alert(
+                "Application status updated successfully!\n\n" +
+                "Status: " +
+                selectedStatus +
+                "\nApplicant notification: Sent"
+            );
+
+        } else {
+
+            alert(
+                "Application status updated successfully!\n\n" +
+                "Status: " +
+                selectedStatus
+            );
+
+        }
+
+
+        window.location.href =
+            "applications.html";
+
+
+    } catch (error) {
+
+        console.error(
+            "Status update error:",
+            error
+        );
+
+        alert(
+            "Cannot connect to the backend. Please make sure the server is running."
+        );
+    }
+
+}
+
+
+// ================= CANCEL =================
+
+function cancelUpdate() {
+
+    window.location.href =
+        "applications.html";
+
+}
+
+
+// ================= LOGOUT =================
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+// ================= START =================
+
+loadApplication();
+
+</script>
+
+</body>
+</html>

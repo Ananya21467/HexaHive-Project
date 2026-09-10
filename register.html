@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HexaHive Registration</title>
+    <link rel="stylesheet" href="style.css">
+</head><body><div class="login-box">
+
+    <div class="logo-container">
+        <span class="logo-emoji">🐝</span>
+    </div>
+
+    <h1>HexaHive</h1>
+    <p class="subtitle">Create Applicant Account</p>
+
+    <input type="text" id="name" placeholder="Full name">
+
+    <input type="email" id="email" placeholder="Applicant email">
+
+    <input type="password" id="password" placeholder="Password">
+
+    <input type="password" id="confirmPassword" placeholder="Confirm password">
+
+    <select id="role">
+        <option value="applicant">Applicant</option>
+        <option value="authority">Authority</option>
+    </select>
+
+    <button id="registerBtn">Register</button>
+
+    <p class="register-link">
+        Already have an account?
+        <a href="index.html">Login</a>
+    </p>
+
+</div>
+
+<script>
+    document.querySelector("#registerBtn").onclick = async () => {
+        const name = document.querySelector("#name").value.trim();
+        const email = document.querySelector("#email").value.trim();
+        const password = document.querySelector("#password").value;
+        const confirmPassword = document.querySelector("#confirmPassword").value;
+
+        const role = document.querySelector("#role").value;
+
+        if(name === "" || email === "" || password === ""){
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        if(password !== confirmPassword){
+            alert("Passwords do not match.");
+            return;
+        }
+
+        if(password.length < 6){
+            alert("Password must be at least 6 chartacters.");
+            return;
+        }
+        try{
+            const response = await fetch("http://localhost:5000/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password,
+                    role: "applicant"
+                })
+            });
+            const data = await response.json();
+            if(!response.ok){
+                alert(data.message);
+                return;
+            }
+            alert("Registration successful! Please login.");
+
+            window.location.href = "index.html";
+        } catch(error){
+            console.error(error);
+
+            alert("Cannot connect to the backend. Please make sure teh server is running.");
+        }
+  }
+</script>
+
+</body>
+</html>

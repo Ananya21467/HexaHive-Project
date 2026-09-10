@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Track Application | HexaHive</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #1e293b;
+        }
+
+        .navbar {
+            background: #0f3d5e;
+            color: white;
+            padding: 18px 40px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            background: white;
+            color: #0f3d5e;
+
+            padding: 9px 18px;
+            border-radius: 6px;
+
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1050px;
+
+            margin: 35px auto;
+        }
+
+        .page-title {
+            color: #0f3d5e;
+            font-size: 30px;
+
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            color: #0f3d5e;
+            margin-bottom: 20px;
+        }
+
+        .status-box {
+            padding: 20px;
+
+            background: #eef6ff;
+
+            border-left: 5px solid #0f3d5e;
+
+            border-radius: 7px;
+
+            margin-bottom: 20px;
+        }
+
+        .status {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d97706;
+        }
+
+        .info {
+            margin: 12px 0;
+            color: #475569;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .loading {
+            color: #64748b;
+        }
+
+        .error {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .btn {
+            border: none;
+
+            padding: 13px 25px;
+
+            border-radius: 6px;
+
+            font-size: 15px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            background: #0f3d5e;
+            color: white;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="navbar">
+
+        <div class="logo">
+            HexaHive
+        </div>
+
+        <a href="applicant-dashboard.html" class="back-btn">
+            ← Dashboard
+        </a>
+
+    </div>
+
+
+    <div class="container">
+
+        <h1 class="page-title">
+            Track Application
+        </h1>
+
+        <p class="subtitle">
+            Track the current status of your industrial approval application.
+        </p>
+
+
+        <div class="card">
+
+            <h2>
+                Application Status
+            </h2>
+
+            <div id="applicationDetails">
+
+                <p class="loading">
+                    Loading application details...
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn"
+            onclick="window.location.href='applicant-dashboard.html'">
+
+            Back to Dashboard
+
+        </button>
+
+    </div>
+
+
+    <script>
+
+        async function loadApplication() {
+
+            const applicationId =
+                localStorage.getItem("currentApplicationId");
+
+
+            if (!applicationId) {
+
+                document.getElementById("applicationDetails").innerHTML =
+                    '<p class="error">Application not found.</p>';
+
+                return;
+
+            }
+
+
+            try {
+
+                const response = await fetch(
+                    `http://localhost:5000/api/applications/${applicationId}`
+                );
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    document.getElementById("applicationDetails").innerHTML =
+                        `<p class="error">${data.message || "Failed to load application."}</p>`;
+
+                    return;
+
+                }
+
+
+                const application = data.application;
+
+
+                document.getElementById("applicationDetails").innerHTML = `
+
+                    <div class="status-box">
+
+                        <p class="label">
+                            Current Status
+                        </p>
+
+                        <p class="status">
+                            ${application.status}
+                        </p>
+
+                    </div>
+
+
+                    <p class="info">
+
+                        <span class="label">
+                            Project Name:
+                        </span>
+
+                        ${application.projectName}
+
+                    </p>
+
+
+                    <p class="info">
+
+                        <span class="label">
+                            Company:
+                        </span>
+
+                        ${application.companyName}
+
+                    </p>
+
+
+                    <p class="info">
+
+                        <span class="label">
+                            Applicant:
+                        </span>
+
+                        ${application.applicantName}
+
+                    </p>
+
+                `;
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("applicationDetails").innerHTML =
+                    '<p class="error">Cannot connect to the backend.</p>';
+
+            }
+
+        }
+
+
+        loadApplication();
+
+    </script>
+
+</body>
+
+</html>

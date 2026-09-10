@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Documents - Industrial Approvals</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="logo">
+            🏭 <span>Industrial Approval Portal</span>
+        </div>
+
+        <div class="nav-right">
+            <span>Authority Panel</span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- Page Heading -->
+        <div class="page-header">
+            <div>
+                <h1>Verify Documents</h1>
+                <p>Review and verify documents submitted by the applicant.</p>
+            </div>
+
+            <a href="review-application.html" class="back-btn">
+                ← Back to Application
+            </a>
+        </div>
+
+
+        <!-- Application Information -->
+        <section class="card">
+
+            <h2>Application Details</h2>
+
+            <div class="details-grid">
+
+                <div>
+                    <label>Application ID</label>
+                    <p id="applicationId">Loading...</p>
+                </div>
+
+                <div>
+                    <label>Applicant Name</label>
+                    <p id="applicantName">Loading</p>
+                </div>
+
+                <div>
+                    <label>Industry Type</label>
+                    <p id="industryType">Loading</p>
+                </div>
+
+                <div>
+                    <label>Application Date</label>
+                    <p id="applicationDate">Loading...</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Documents -->
+        <section class="card">
+
+            <h2>Submitted Documents</h2>
+
+            <p class="section-description">
+                Check each document carefully and select the appropriate verification status.
+            </p>
+
+            <div id="documentsContainer">
+                <p>Loading submitted dosuments...</p>
+            </div>
+        </section>
+
+
+        <!-- Verification Summary -->
+        <section class="card">
+
+            <h2>Verification Summary</h2>
+
+            <div class="summary-grid">
+
+                <div class="summary-box">
+                    <span>Total Documents</span>
+                    <strong id="totalDocuments">0</strong>
+                </div>
+
+                <div class="summary-box verified-box">
+                    <span>Verified</span>
+                    <strong id="verifiedCount">0</strong>
+                </div>
+
+                <div class="summary-box rejected-box">
+                    <span>Rejected</span>
+                    <strong id="rejectedCount">0</strong>
+                </div>
+
+                <div class="summary-box pending-box">
+                    <span>Pending</span>
+                    <strong id="pendingCount">5</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Remarks -->
+        <section class="card">
+
+            <h2>Authority Remarks</h2>
+
+            <textarea
+                id="remarks"
+                placeholder="Enter remarks regarding document verification..."
+                rows="5"></textarea>
+
+        </section>
+
+
+        <!-- Bottom Actions -->
+        <div class="bottom-actions">
+
+            <button class="secondary-btn" onclick="saveProgress()">
+                Save Progress
+            </button>
+
+            <button class="primary-btn" onclick="completeVerification()">
+                ✓ Complete Verification
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+    <script>
+
+let application = null;
+let documentList = [];
+
+
+/* Load selected application */
+
+async function loadApplication() {
+
+    const applicationId =
+        localStorage.getItem("selectedApplicationId");
+
+    if (!applicationId) {
+        alert("Application not found.");
+        window.location.href = "applications.html";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `http://localhost:5000/api/applications/${applicationId}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Failed to load application.");
+            return;
+        }
+
+        application = data.application;
+
+        console.log("Application loaded:", application);
+
+        document.getElementById("applicationId").textContent =
+            application._id;
+
+        document.getElementById("applicantName").textContent =
+            application.applicantName;
+
+        document.getElementById("industryType").textContent =
+            application.industryType;
+
+        document.getElementById("applicationDate").textContent =
+            new Date(application.createdAt).toLocaleDateString();
+
+        loadDocuments();
+
+    } catch (error) {
+
+        console.error("Application loading error:", error);
+
+        alert(
+            "Cannot connect to the backend. Please make sure the server is running."
+        );
+    }
+}
+
+
+/* Display actual submitted documents */
+
+function loadDocuments() {
+
+    const documents = application.documents || {};
+
+    documentList = [
+        {
+            title: "Company Registration Certificate",
+            description: "Certificate of registration of the industrial entity",
+            file: documents.companyRegistration
+        },
+        {
+            title: "Land Ownership / Lease Document",
+            description: "Proof of ownership or legal possession of industrial land",
+            file: documents.landOwnership
+        },
+        {
+            title: "Project Report / DPR",
+            description: "Detailed project report submitted by the applicant",
+            file: documents.projectReport
+        },
+        {
+            title: "Environmental / Pollution Documents",
+            description: "Environmental compliance and pollution documents",
+            file: documents.environmentalDocuments
+        },
+        {
+            title: "Building / Site Plan",
+            description: "Building and industrial site plan",
+            file: documents.buildingSitePlan
+        },
+        {
+            title: "Additional Supporting Document",
+            description: "Additional document provided by the applicant",
+            file: documents.additionalDocument
+        }
+    ];
+
+    const container =
+        document.getElementById("documentsContainer");
+
+    container.innerHTML = "";
+
+    let submittedCount = 0;
+
+    documentList.forEach(function(doc, index) {
+
+        if (!doc.file) {
+            return;
+        }
+
+        submittedCount++;
+
+        const div = document.createElement("div");
+
+        div.className = "document";
+
+        div.innerHTML = `
+            <div class="document-info">
+
+                <div class="document-icon">📄</div>
+
+                <div>
+                    <h3>${doc.title}</h3>
+
+                    <p>${doc.description}</p>
+
+                    <span class="file-name">
+                        ${doc.file}
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="document-actions">
+
+                <button
+                    class="view-btn"
+                    onclick="viewDocument('${doc.file}')">
+                    👁 View
+                </button>
+
+                <select id="doc${index}">
+                    <option value="pending">Pending</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+
+            </div>
+        `;
+
+        container.appendChild(div);
+
+    });
+
+
+    if (submittedCount === 0) {
+
+        container.innerHTML =
+            "<p>No documents have been submitted.</p>";
+
+    }
+
+
+    document.getElementById("totalDocuments").textContent =
+        submittedCount;
+
+    setupSelectListeners();
+
+    updateCounts();
+}
+
+
+/* Verification counters */
+
+function setupSelectListeners() {
+
+    const selects =
+        document.querySelectorAll("#documentsContainer select");
+
+    selects.forEach(function(select) {
+
+        select.addEventListener(
+            "change",
+            updateCounts
+        );
+
+    });
+}
+
+
+function updateCounts() {
+
+    const selects =
+        document.querySelectorAll("#documentsContainer select");
+
+    let verified = 0;
+    let rejected = 0;
+    let pending = 0;
+
+    selects.forEach(function(select) {
+
+        if (select.value === "verified") {
+
+            verified++;
+
+        } else if (select.value === "rejected") {
+
+            rejected++;
+
+        } else {
+
+            pending++;
+
+        }
+
+    });
+
+    document.getElementById("verifiedCount").textContent =
+        verified;
+
+    document.getElementById("rejectedCount").textContent =
+        rejected;
+
+    document.getElementById("pendingCount").textContent =
+        pending;
+}
+
+
+/* View document */
+
+function viewDocument(fileName) {
+
+    alert(
+        "Document Preview\n\n" +
+        "File: " + fileName +
+        "\n\n" +
+        "The uploaded file is currently stored as part of this application."
+    );
+
+}
+
+
+/* Save progress */
+
+function saveProgress() {
+
+    alert(
+        "Document verification progress saved successfully."
+    );
+
+}
+
+
+/* Complete verification */
+
+async function completeVerification() {
+
+    const selects =
+        document.querySelectorAll(
+            "#documentsContainer select"
+        );
+
+    let pending = 0;
+    let rejected = 0;
+
+    selects.forEach(function(select) {
+
+        if (select.value === "pending") {
+            pending++;
+        }
+
+        if (select.value === "rejected") {
+            rejected++;
+        }
+
+    });
+
+
+    if (pending > 0) {
+
+        alert(
+            "Please verify or reject all documents before completing verification."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const newStatus =
+            rejected > 0
+                ? "Documents Rejected"
+                : "Documents Verified";
+
+
+        const response = await fetch(
+            `http://localhost:5000/api/applications/update/${application._id}`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                data.message ||
+                "Failed to update application status."
+            );
+
+            return;
+        }
+
+
+        alert(
+            "Document verification completed successfully."
+        );
+
+
+        window.location.href =
+            "update-status.html";
+
+
+    } catch (error) {
+
+        console.error(
+            "Verification update error:",
+            error
+        );
+
+        alert(
+            "Cannot connect to the backend. Please make sure the server is running."
+        );
+    }
+
+}
+
+
+/* Logout */
+
+function logout() {
+
+    localStorage.removeItem("loggedInUser");
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+/* Start */
+
+loadApplication();
+
+</script>
+
+</body>
+</html>
