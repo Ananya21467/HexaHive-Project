@@ -12,7 +12,7 @@ document.querySelector("button").onclick = async () => {
     try {
 
         // Send login details to backend
-        const response = await fetch("http://hexahive-project.onrender.com/api/auth/login", {
+        const response = await fetch("https://hexahive-project.onrender.com/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
