@@ -434,7 +434,7 @@ async function rejectApplication() {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/applications/update/${selectedApplication._id}`,
+            `https://hexahive-project.onrender.com/api/applications/update/${selectedApplication._id}`,
             {
                 method: "PUT",
                 headers: {
