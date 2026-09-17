@@ -172,7 +172,7 @@ async function loadApplication() {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/applications/${applicationId}`
+            `https://hexahive-project.onrender.com/api/applications/${applicationId}`
         );
 
         const data = await response.json();
